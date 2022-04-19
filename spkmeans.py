@@ -33,7 +33,7 @@ def main():
     indexes = kmeansPP(df, k, N)
 
     str_index = ""
-    for i in range(K - 1):
+    for i in range(k - 1):
         str_index += str(indexes[i]) + ","
     str_index += str(indexes[-1])
     try:
