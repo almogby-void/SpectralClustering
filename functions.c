@@ -204,14 +204,12 @@ double **Jacobi(double **A, int n, int iter){
     return Jacobi(A,n,iter);
 }
 
-double off(double ** matrix,int n){
-    int sum,i,j; 
-    sum = 0;
-    for (i = 0; i < n; i++){
-        for (j = 0; j < n; j++){
-            sum += (i!=j)*matrix[i][j]*matrix[i][j];
-        }
-    }
+double off(double **matrix, int n) {
+    double sum = 0;
+    int i, j;
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            sum += (i != j) * matrix[i][j] * matrix[i][j];
     return sum;
 }
 
