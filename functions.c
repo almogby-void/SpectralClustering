@@ -236,3 +236,26 @@ void print_matrix(double **matrix, int n) {
     }
     printf("-----\n");
 }
+
+typedef struct list_t {
+    double *arr;
+    struct list_t *next;
+} List;
+
+double **load_matrix(char *filename, int *m, int *n) {
+    int i, j;
+    double **mat;
+    double *arr;
+    List *head, *curr;
+
+
+
+    mat = malloc(*m * sizeof(double*));
+    for (i = 0; i < *m; i++) {
+        mat[i] = head->arr;
+        curr = head->next;
+        free(head);
+        head = curr;
+    }
+    return mat;
+}
