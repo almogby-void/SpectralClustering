@@ -242,7 +242,7 @@ typedef struct list_t {
     struct list_t *next;
 } List;
 
-double **load_matrix(char *filename, int *m, int *n) {
+double **load_matrix(char *filename, int *m, int *n) { /* m rows and n columns */
     int i, j;
     double **mat;
     double *arr;
