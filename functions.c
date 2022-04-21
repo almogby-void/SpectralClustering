@@ -5,8 +5,8 @@
 #include <time.h>
 #include <math.h>
 
-#define epsilon 0.000002
-#define max_rotations 500
+#define epsilon 0.00001
+#define max_rotations 100
 
 double **rand_matrix(int n);
 double **symmetric(double ** matrix,int n);
@@ -19,20 +19,16 @@ double **matrix_mult(double ** A,double ** B);
 double **matrix_func(double ** matrix,double (*f)(double));
 double **L_norm(double ** matrix);
 double divsqrt(double A);
-double **Jacobi_Rotation_Matrix(double ** A,int i, int j, int n);
+double **Jacobi_Rotation_sMatrix(double ** A,int i, int j, int n);
 double **Jacobi(double **A, int n, int iter);
 double off(double ** matrix,int n);
+void normalize(double **A, int n, int k);
+double *diag(double ** matrix,int n);
 
 
 int main(int argc, char *argv[]) {
     double **random;
     random = rand_matrix(3);
-    random[0][0] = 3;
-    random[0][1] = 2;
-    random[0][2] = 4;
-    random[1][1] = 0;
-    random[1][2] = 2;
-    random[2][2] = 3;
     random = symmetric(random,3);
     print_matrix(random,3);
     print_matrix(Jacobi(random,3,0),3);
@@ -51,7 +47,7 @@ double **rand_matrix(int n){
  
     for(i = 0; i < n; i++){
         for(j = 0; j < n; j++){
-            matrix[i][j] = (rand())%10;
+            matrix[i][j] = (rand()*rand())%10;
         }
     }
     return matrix;
@@ -67,7 +63,7 @@ double **symmetric(double ** matrix,int n){/*TODO*/
 }
 
 double **adj_matrix(double ** matrix){
-    int i, j;
+    int i, j;   
     double **adj;
     adj = calloc(3,sizeof(double*));
      
@@ -97,6 +93,17 @@ double **diag_degree_matrix(double ** matrix){
             diag[i][i] +=  exp(-dist(matrix[i],matrix[j],3)/2);
         }
     }
+    
+    return diag;
+}
+
+double *diag(double ** matrix,int n){
+    int i;
+    double *diag = calloc(n,sizeof(double));
+    for (i = 0; i < n; i++)
+    {
+        diag[i] = matrix[i][i];
+    }
     return diag;
 }
 
@@ -107,7 +114,7 @@ double **Identity(int n){ /*identity matrix*/
     m = calloc(3,sizeof(double*) * n); 
     for(i = 0; i < n; i++)
         m[i] = calloc(3,sizeof(double*));
- 
+    
     for(i = 0; i < n; i++)
         m[i][i] = 1;
     return m;
@@ -164,10 +171,9 @@ double **Jacobi(double **A, int n, int iter){
             }
         }
     }
-    theta = (A[i][i]-A[j][j])/(2*A[i][j]);
+    theta = (A[j][j]-A[i][i])/(2*A[i][j]);
     t = ((theta >= 0) - (theta < 0))/(abs(theta) + sqrt(theta*theta + 1));
     c = 1/sqrt(t*t+1);
-    /*printf("%f,%f,%f,%d,%d,%f\n",theta,t,c,i,j,A[i][j]);*/
     s = t*c;
     for (col = 0; col < n; col++){ /* switcheroo'd from the instructions */
         temp[0][col] = c*A[i][col] - s*A[j][col];
@@ -175,8 +181,7 @@ double **Jacobi(double **A, int n, int iter){
     }
     temp[0][i] = c*c*A[i][i] + s*s*A[j][j] - 2*s*c*A[i][j];
     temp[1][j] = s*s*A[i][i] + c*c*A[j][j] + 2*s*c*A[i][j];
-    printf("%f\n",temp[1][j]);
-    temp[0][j] = (c*c-s*s)*A[i][j]+s*c*(A[i][i]-A[j][j]); /*TODO: Check if true */
+    temp[0][j] = 0;/*(c*c-s*s)*A[i][j]+s*c*(A[i][i]-A[j][j]); TODO: Check if true */
     temp[1][i] = temp[0][j];
 
     for ( col = 0; col < n; col++){
@@ -198,10 +203,44 @@ double **Jacobi(double **A, int n, int iter){
     print_matrix(A,n);
     square_diff+=1;
     square_diff = old_off - off(A,n);
-    printf("%f,%f,%f,%f,%f,i=%d,j=%d\n",c,s,old_off,off(A,n),square_diff,i,j);
+    printf("theta:%f,t:%f,c:%f,s:%f,old_off:%f,off:%f,diff:%f,i=%d,j=%d\n",theta,t,c,s,old_off,off(A,n),square_diff,i,j);
     if ((square_diff <= epsilon) | (++iter > max_rotations))
         return A;
     return Jacobi(A,n,iter);
+}
+
+int cmpfunc (const void * a, const void * b) {
+   return ( *(int*)a - *(int*)b );
+}
+
+
+int Heuristic (double *list, int n){
+    int i,argmax;
+    double delta,max_delta = 0;
+    n = (int)floor(n/2);
+    qsort(list,n,sizeof(double),cmpfunc);
+    for (i = 0; i < n; i++){
+        delta = (list[i] - list[i+1]);
+        if (delta > max_delta){
+            max_delta = delta;
+            argmax = i;
+        }
+    }
+    return argmax;
+}
+
+void normalize(double **A, int n, int k){
+    int i,j;
+    double sum = 0;
+    for (i = 0; i < n; i++){
+        sum = 0;
+        for (j = 0; j < k; j++){
+            sum+=A[i][j]*A[i][j];
+        }
+        for (j = 0; j < k; j++){
+            A[i][j] = A[i][j]/sqrt(sum);
+        }
+    }
 }
 
 double off(double **matrix, int n) {
