@@ -250,6 +250,19 @@ double **load_matrix(char *filename, int *m, int *n) {
 
 
 
+    head = malloc(sizeof(List*));
+    curr = head;
+
+
+    while (1) {
+        curr->next = malloc(sizeof(List*));
+
+
+        curr = curr->next;
+    }
+
+
+
     mat = malloc(*m * sizeof(double*));
     for (i = 0; i < *m; i++) {
         mat[i] = head->arr;
