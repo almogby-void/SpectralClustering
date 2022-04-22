@@ -8,6 +8,13 @@
 #define epsilon 0.000002
 #define max_rotations 500
 
+/* typedef enum {wam, ddg, lnorm, jacobi} goal; */
+
+typedef struct list_t {
+    double *arr;
+    struct list_t *next;
+} LIST;
+
 double **rand_matrix(int n);
 double **symmetric(double **matrix, int n);
 double **Identity(int n);
@@ -22,9 +29,16 @@ double divsqrt(double A);
 double **Jacobi_Rotation_Matrix(double **A, int i, int j, int n);
 double **Jacobi(double **A, int n, int iter);
 double off(double **matrix, int n);
+double **file_to_matrix(char *filename, int *m, int *n);
 
 
 int main(int argc, char **argv) {
+    if (argc != 3) {
+        printf("Invalid Input!\n");
+        return 1;
+    }
+
+
     double **random;
     random = rand_matrix(3);
     random[0][0] = 3;
@@ -237,38 +251,41 @@ void print_matrix(double **matrix, int n) {
     printf("-----\n");
 }
 
-typedef struct list_t {
-    double *arr;
-    struct list_t *next;
-} List;
-
-double **load_matrix(char *filename, int *m, int *n) { /* m rows and n columns */
-    int i, j;
+double **file_to_matrix(char *filename, int *m, int *n) { /* m rows and n columns */
+    int i, j, rows = 0, cols= 0;
     double **mat;
     double *arr;
-    List *head, *curr;
+    LIST *head, *curr;
+    FILE *file = fopen(filename, "r");
+
+    if (file == NULL) {
+        printf("Invalid Input!\n");
+        return 1;
+    }
 
 
-
-    head = malloc(sizeof(List*));
+    head = malloc(sizeof(LIST*));
     curr = head;
 
 
     while (1) {
-        curr->next = malloc(sizeof(List*));
+        curr->next = malloc(sizeof(LIST*));
 
 
         curr = curr->next;
+        rows++;
     }
 
 
-
-    mat = malloc(*m * sizeof(double*));
-    for (i = 0; i < *m; i++) {
+    fclose(file);
+    mat = malloc(sizeof(double*) * rows);
+    for (i = 0; i < rows; i++) {
         mat[i] = head->arr;
         curr = head->next;
         free(head);
         head = curr;
     }
+    *m = rows;
+    *n = cols;
     return mat;
 }
