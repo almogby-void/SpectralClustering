@@ -291,9 +291,7 @@ double **file_to_matrix(char *filename, int *m, int *n) { /* m rows and n column
         fgets(line + line_size - 1, line_size + 1, file);
             line_size *= 2;
     }
-
     curr->arr = malloc(sizeof(double) * 10);
-    i = (unsigned) strlen(line);
     token = strtok(line, ",");
     for (i = 0; i < 10; i++) {
         if (token == NULL)
