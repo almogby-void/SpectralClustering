@@ -5,79 +5,33 @@
 #include <time.h>
 #include <math.h>
 
+#include "spkmeans.h"
+
 #define epsilon 0.00001
 #define max_rotations 100
 
-double **rand_matrix(int n);
-double **symmetric(double **matrix, int n);
-double **Identity(int n);
-void print_matrix(double **matrix, int n);
-double **adj_matrix(double **matrix);
-double **diag_degree_matrix(double **matrix);
-static double dist(double *X, double *Y, int dim);
-double **matrix_mult(double **A, double **B);
-double **matrix_func(double **matrix, double (*f)(double));
-double **L_norm(double **matrix);
-double divsqrt(double A);
-<<<<<<< HEAD
-double **Jacobi_Rotation_sMatrix(double ** A,int i, int j, int n);
-double **Jacobi(double **A, int n, int iter);
-double off(double ** matrix,int n);
-void normalize(double **A, int n, int k);
-double *diag(double ** matrix,int n);
-=======
-double **Jacobi_Rotation_Matrix(double **A, int i, int j, int n);
-double **Jacobi(double **A, int n, int iter);
-double off(double **matrix, int n);
->>>>>>> 8c51b6446188ed814ce16192cebddc2840f909b7
+
+
 
 
 int main(int argc, char **argv) {
-    double **random;
-    random = rand_matrix(3);
-<<<<<<< HEAD
-    random = symmetric(random,3);
-    print_matrix(random,3);
-    print_matrix(Jacobi(random,3,0),3);
-=======
-    random[0][0] = 3;
-    random[0][1] = 2;
-    random[0][2] = 4;
-    random[1][1] = 0;
-    random[1][2] = 2;
-    random[2][2] = 3;
-    random = symmetric(random, 3);
-    print_matrix(random, 3);
-    print_matrix(Jacobi(random, 3, 0), 3);
->>>>>>> 8c51b6446188ed814ce16192cebddc2840f909b7
+    double **M;
+    int n,dim;
+    M = file_to_matrix("test_input.txt",&n,&dim);
+    print_matrix(M,n,dim);
+    print_matrix(diag_degree_matrix(adj_matrix(M,n,dim),n),n,n);
+
     argv[0] = argv[1];
-    return argc;
+    return argc; 
 } 
 
 double **rand_matrix(int n) {
     int i, j;
-    double **matrix;
-<<<<<<< HEAD
-    matrix = calloc(n,sizeof(double*));
-     
-    for(i = 0; i < n; i++) {
-        matrix[i] = malloc(sizeof(double*) * n);
-    }
- 
-    for(i = 0; i < n; i++){
-        for(j = 0; j < n; j++){
-            matrix[i][j] = (rand()*rand())%10;
-        }
-    }
-=======
-    matrix = calloc(n, sizeof(double*));
-    for (i = 0; i < n; i++)
-        matrix[i] = malloc(sizeof(double) * n);
+    double **M = matrix(n,n);
     for (i = 0; i < n; i++)
         for (j = 0; j < n; j++)
-            matrix[i][j] = (rand()) % 10;
->>>>>>> 8c51b6446188ed814ce16192cebddc2840f909b7
-    return matrix;
+            M[i][j] = (rand()) % 10;
+    return M;
 }
 
 double **symmetric(double **matrix, int n) { /* TODO */ 
@@ -88,92 +42,71 @@ double **symmetric(double **matrix, int n) { /* TODO */
     return matrix;
 }
 
-<<<<<<< HEAD
-double **adj_matrix(double ** matrix){
+double **adj_matrix(double ** M, int n, int dim){
     int i, j;   
-=======
-double **adj_matrix(double **matrix) {
-    int i, j;
->>>>>>> 8c51b6446188ed814ce16192cebddc2840f909b7
     double **adj;
-    adj = calloc(3, sizeof(double*));
-    for (i = 0; i < 3; i++)
-        adj[i] = calloc(3, sizeof(double) * 3);
-    for (i = 0; i < 3; i++)
-        for (j = 0; j < 3; j++)
-            adj[i][j] = (i != j) * exp(-dist(matrix[i], matrix[j], 3) / 2);
+    adj = matrix(n,n);
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            adj[i][j] = (i != j) * exp(-dist(M[i], M[j], dim) / 2);
     return adj;
 }
 
-double **diag_degree_matrix(double **matrix) {
+double **diag_degree_matrix(double **M,int n) {
     int i, j;
     double **diag;
-<<<<<<< HEAD
-    diag = calloc(3,sizeof(double*) * 3);
-     
-    for(i = 0; i < 3; i++) {
-        diag[i] = calloc(3,sizeof(double*));
-    }
+    diag = matrix(n,n);
  
-    for(i = 0; i < 3; i++){
-        for(j = 0; j < 3; j++){
-            diag[i][i] +=  exp(-dist(matrix[i],matrix[j],3)/2);
+    for(i = 0; i < n; i++){
+        for(j = 0; j < n; j++){
+            diag[i][i] +=  exp(-dist(M[i],M[j],n)/2);
         }
     }
-    
-    return diag;
 }
 
 double *diag(double ** matrix,int n){
     int i;
     double *diag = calloc(n,sizeof(double));
+    if (diag == NULL)
+        error();
     for (i = 0; i < n; i++)
     {
         diag[i] = matrix[i][i];
     }
-=======
-    diag = calloc(3, sizeof(double*) * 3);
-    for (i = 0; i < 3; i++)
-        diag[i] = calloc(3, sizeof(double));
-    for (i = 0; i < 3; i++)
-        for (j = 0; j < 3; j++)
-            diag[i][i] += exp(-dist(matrix[i], matrix[j], 3) / 2);
->>>>>>> 8c51b6446188ed814ce16192cebddc2840f909b7
     return diag;
 }
 
 double **Identity(int n) { /* identity matrix */
     int i;
     double **m;
-<<<<<<< HEAD
     /* init matrix*/
-    m = calloc(3,sizeof(double*) * n); 
-    for(i = 0; i < n; i++)
-        m[i] = calloc(3,sizeof(double*));
+    m = matrix(n,n);
     
     for(i = 0; i < n; i++)
-=======
-    /* init matrix */
-    m = calloc(3, sizeof(double*) * n);
-    for (i = 0; i < n; i++)
-        m[i] = calloc(3, sizeof(double));
-    for (i = 0; i < n; i++)
->>>>>>> 8c51b6446188ed814ce16192cebddc2840f909b7
         m[i][i] = 1;
     return m;
 }
 
-double **L_norm(double **matrix) {
+double **matrix(int n,int m){
+    int i = 0;
+    double **M = calloc(n,sizeof(double*)); 
+    for(i = 0; i < n; i++)
+        M[i] = calloc(m,sizeof(double));
+    if (M == NULL)
+        error();
+    return M;
+}
+
+
+double **L_norm(double **M,int n) {
     int i, j;
     double **L, **W, **D;
-    L = calloc(3, sizeof(double*) * 3);
-    for (i = 0; i < 3; i++)
-        L[i] = calloc(3, sizeof(double));
-    W = adj_matrix(matrix);
-    D = matrix_func(diag_degree_matrix(matrix), divsqrt); /* divsqrt is a function */
-    L = matrix_mult(matrix_mult(D, W), D);
-    for (i = 0; i < 3; i++)
-        for (j = 0; j < 3; j++)
+    L = matrix(n,n);
+    W = adj_matrix(M,n,3);
+    D = matrix_func(diag_degree_matrix(M,n), divsqrt,n); /* divsqrt is a function */
+    L = matrix_mult(matrix_mult(D, W,n), D,n);
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
             L[i][j] = (i == j) - L[i][j];
     return L;
 }
@@ -183,7 +116,7 @@ double **Jacobi_Rotation_Matrix(double **A, int i, int j, int n) { /* Unused? */
     double c, theta, t;
     m = Identity(n);
     theta = (A[i][i] - A[j][j]) / (2 * A[i][j]);
-    t = ((theta >= 0) - (theta < 0)) / (abs(theta) + sqrt(theta * theta + 1));
+    t = ((theta >= 0) - (theta < 0)) / (fabs(theta) + sqrt(theta * theta + 1));
     c = 1 / sqrt(t * t + 1);
     m[i][i] = c;
     m[j][j] = c;
@@ -198,19 +131,23 @@ double **Jacobi(double **A, int n, int iter) {
     double **temp; /* A', temp[0]=A'[i], temp[1]=A'[j] */
     double c, theta, t, s, square_diff, old_off;
     temp = calloc(2, sizeof(double*));
+    if (temp == NULL)
+        error();
     temp[0] = malloc(sizeof(double) * n);
     temp[1] = malloc(sizeof(double) * n);
+    if ((temp[0] == NULL) | (temp[1] == NULL))
+        error();
     i = 1;
     j = 0;
     old_off = off(A, n);
     for (row = 0; row < n; row++)
         for (col = 0; col < n; col++)
-            if ((row != col) & (abs(A[row][col]) > abs(A[i][j]))) { /* Is it supposed to be a bitwise AND? */
+            if ((row != col) & (fabs(A[row][col]) > fabs(A[i][j]))) { /* Is it supposed to be a bitwise AND? */
                 i = row;
                 j = col;
             }
-    theta = (A[i][i] - A[j][j]) / (2 * A[i][j]);
-    t = ((theta >= 0) - (theta < 0)) / (abs(theta) + sqrt(theta * theta + 1));
+    theta = (A[j][j] - A[i][i]) / (2 * A[i][j]);
+    t = ((theta >= 0) - (theta < 0)) / (fabs(theta) + sqrt(theta * theta + 1));
     c = 1 / sqrt(t * t + 1);
     /* printf("%f,%f,%f,%d,%d,%f\n",theta,t,c,i,j,A[i][j]); */
     s = t * c;
@@ -240,10 +177,11 @@ double **Jacobi(double **A, int n, int iter) {
     A[i][j] = temp[0][j];
     A[j][i] = A[i][j];
     
-    print_matrix(A,n);
+    print_matrix(A,n,n);
     square_diff+=1;
     square_diff = old_off - off(A,n);
     printf("theta:%f,t:%f,c:%f,s:%f,old_off:%f,off:%f,diff:%f,i=%d,j=%d\n",theta,t,c,s,old_off,off(A,n),square_diff,i,j);
+    free(temp);
     if ((square_diff <= epsilon) | (++iter > max_rotations))
         return A;
     return Jacobi(A, n, iter);
@@ -292,29 +230,24 @@ double off(double **matrix, int n) {
     return sum;
 }
 
-double **matrix_func(double **matrix, double (*f)(double)) {
+double **matrix_func(double **M, double (*f)(double), int n) {
     int i, j;
     double **result;
-    result = calloc(3, sizeof(double*) * 3);
-    for (i = 0; i < 3; i++)
-        result[i] = calloc(3, sizeof(double));
-    for (i = 0; i < 3; i++)
-        for (j = 0; j < 3; j++)
-            result[i][j] = f(matrix[i][j]);
+    result = matrix(n,n);
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            result[i][j] = f(M[i][j]);
     return result;
 }
 
 double divsqrt(double A) {return A ? 1 / sqrt(A) : 0;}
 
-double **matrix_mult(double **A, double **B) {
+double **matrix_mult(double **A, double **B,int n) {
     int i, j, k; 
-    double **result;
-    result = calloc(3, sizeof(double*) * 3);
-    for (i = 0; i < 3; i++)
-        result[i] = calloc(3, sizeof(double));
-    for (i = 0; i < 3; i++)
-        for (j = 0; j < 3; j++)
-            for (k = 0; k < 3; k++)
+    double **result = matrix(n,n);
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            for (k = 0; k < n; k++)
                 result[i][j] += A[i][k] * B[k][j];
     return result;
 }
@@ -328,23 +261,88 @@ static double dist(double *X, double *Y, int dim) {
     return sqrt(result);
 }
 
-void print_matrix(double **matrix, int n) {
+static void error(){
+    printf("An Error Has Occurred");
+    exit(0);
+}
+
+void print_matrix(double **matrix, int m, int n){
     int i, j;
     printf("\n");
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < m; i++) {
         for (j = 0; j < n; j++)
-            printf("%.6f,", matrix[i][j]); /* Is there supposed to be a space after the comma? */
+            printf("%.3f,", matrix[i][j]); /* Is there supposed to be a space after the comma? */
         printf("%s","\n"); /* Is there supposed to be a space after the comma? */
     }
     printf("-----\n");
 }
 
+
+
 typedef struct list_t {
     double *arr;
     struct list_t *next;
-} List;
+} LIST;
 
-double **load_matrix(char *filename, int *m, int *n) {
+double **file_to_matrix(char *filename, int *m, int *n) { /* m rows and n columns */
+    int i, rows = 0, cols = 0, line_size = 1000;
+    char *line, *token;
+    double **mat;
+    LIST *head, *curr;
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Invalid Input!\n");
+        exit(1);
+    }
+    rows++;
+
+    line = malloc(sizeof(char) * line_size);
+    head = malloc(sizeof(LIST*));
+    curr = head;
+    fgets(line, line_size, file);
+    if (line == NULL)
+        exit(1);
+    while (1 + strlen(line) == (unsigned) line_size) {
+        line = realloc(line, line_size * 2);
+        fgets(&(line[line_size - 2]), line_size, file);
+        line_size *= 2;
+    }
+    curr->arr = malloc(sizeof(double) * 10);
+    token = strtok(line, ",");
+    for (i = 0; i < 10; i++) {
+        if (token == NULL)
+            break;
+        curr->arr[i] = strtod(token, NULL);
+        cols++;
+        token = strtok(NULL, ",");
+    }
+    curr->arr = realloc(curr->arr, sizeof(double) * cols);
+    while (fgets(line, line_size, file) != NULL) {
+        curr->next = malloc(sizeof(LIST*));
+        curr = curr->next;
+        curr->arr = malloc(sizeof(double) * cols);
+        token = strtok(line, ",");
+        for (i = 0; i < cols; i++) {
+            if (token == NULL)
+                break;
+            curr->arr[i] = strtod(token, NULL);
+            token = strtok(NULL, ",");
+        }
+        rows++;
+    }
+    fclose(file);
+    mat = malloc(sizeof(double*) * rows);
+    for (i = 0; i < rows; i++) {
+        mat[i] = head->arr;
+        curr = head->next;
+        free(head);
+        head = curr;
+    }
+    *m = rows;
+    *n = cols;
+    return mat;
+}
+/*double **load_matrix(char *filename, int *m, int *n) {
     int i, j;
     double **mat;
     double *arr;
@@ -373,4 +371,4 @@ double **load_matrix(char *filename, int *m, int *n) {
         head = curr;
     }
     return mat;
-}
+}*/
