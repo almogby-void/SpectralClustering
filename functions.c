@@ -123,7 +123,7 @@ double **L_norm(double **matrix) {
     for (i = 0; i < 3; i++)
         L[i] = calloc(3, sizeof(double));
     W = adj_matrix(matrix);
-    D = matrix_func(diag_degree_matrix(matrix), divsqrt); /* divsqrt is a function */
+    D = matrix_func(diag_degree_matrix(matrix), divsqrt);
     L = matrix_mult(matrix_mult(D, W), D);
     for (i = 0; i < 3; i++)
         for (j = 0; j < 3; j++)
@@ -158,7 +158,7 @@ double **Jacobi(double **A, int n, int iter) {
     old_off = off(A, n);
     for (row = 0; row < n; row++)
         for (col = 0; col < n; col++)
-            if ((row != col) & (abs(A[row][col]) > abs(A[i][j]))) { /* Is it supposed to be a bitwise AND? */
+            if ((row != col) && (abs(A[row][col]) > abs(A[i][j]))) {
                 i = row;
                 j = col;
             }
@@ -177,7 +177,7 @@ double **Jacobi(double **A, int n, int iter) {
     temp[0][j] = (c * c - s * s) * A[i][j] + s * c * (A[i][i] - A[j][j]); /* TODO: Check if true */
     temp[1][i] = temp[0][j];
     for (col = 0; col < n; col++)
-        if ((col != i) & (col != j)) { /* Is it supposed to be a bitwise AND? */
+        if ((col != i) && (col != j)) {
         /* I calculate convergence here instead of the offsets individually as there are a lot of duplicates. */
             square_diff += 2 * (A[i][col] * A[i][col] - temp[0][col] * temp[0][col]);
             square_diff += 2 * (A[j][col] * A[j][col] - temp[1][col] * temp[1][col]);
@@ -196,7 +196,7 @@ double **Jacobi(double **A, int n, int iter) {
     square_diff++;
     square_diff = old_off - off(A, n);
     printf("%f, %f, %f, %f, %f, i=%d, j=%d\n", c, s, old_off, off(A, n), square_diff, i, j);
-    if ((square_diff <= epsilon) | (++iter > max_rotations)) /* Is it supposed to be a bitwise OR? */
+    if ((square_diff <= epsilon) || (++iter > max_rotations))
         return A;
     return Jacobi(A, n, iter);
 }
@@ -269,7 +269,7 @@ void print_2d_array(double **matrix, int m, int n) {
 }
 
 double **file_to_matrix(char *filename, int *m, int *n) { /* m rows and n columns */
-    int i, rows = 0, cols = 0, line_size = 1000;
+    int i, rows = 0, cols = 0, line_size = 10;
     char *line, *token;
     double **mat;
     LIST *head, *curr;
@@ -285,12 +285,15 @@ double **file_to_matrix(char *filename, int *m, int *n) { /* m rows and n column
     fgets(line, line_size, file);
     if (line == NULL)
         exit(1);
+    rows++;
     while (1 + strlen(line) == (unsigned) line_size) {
         line = realloc(line, line_size * 2);
-        fgets(&(line[line_size - 2]), line_size, file);
-        line_size *= 2;
+        fgets(line + line_size - 1, line_size + 1, file);
+            line_size *= 2;
     }
+
     curr->arr = malloc(sizeof(double) * 10);
+    i = (unsigned) strlen(line);
     token = strtok(line, ",");
     for (i = 0; i < 10; i++) {
         if (token == NULL)

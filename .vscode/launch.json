@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": ["spk", "../../Homeworks/ex1/input_1.txt"],
+            "args": ["spk", "../test.txt"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
