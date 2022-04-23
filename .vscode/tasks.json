@@ -8,6 +8,7 @@
                 "-Wall",
                 "-g",
                 "${file}",
+                "-lm",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "&&",

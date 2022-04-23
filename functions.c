@@ -30,27 +30,33 @@ double **Jacobi_Rotation_Matrix(double **A, int i, int j, int n);
 double **Jacobi(double **A, int n, int iter);
 double off(double **matrix, int n);
 double **file_to_matrix(char *filename, int *m, int *n);
+void print_2d_array(double **matrix, int m, int n);
 
 
 int main(int argc, char **argv) {
+    int rows, cols;
+    double **mat;
     if (argc != 3) {
         printf("Invalid Input!\n");
         return 1;
     }
+    mat = file_to_matrix(argv[2], &rows, &cols);
+    print_2d_array(mat, rows, cols);
 
 
-    double **random;
+
+/*     double **random;    
     random = rand_matrix(3);
     random[0][0] = 3;
     random[0][1] = 2;
     random[0][2] = 4;
-    random[1][1] = 0;
+    random[1][1] = 0;#include <math.h>#include <math.h>
     random[1][2] = 2;
     random[2][2] = 3;
     random = symmetric(random, 3);
     print_matrix(random, 3);
     print_matrix(Jacobi(random, 3, 0), 3);
-    argv[0] = argv[1];
+    argv[0] = argv[1]; */
     return argc;
 } 
 
@@ -251,32 +257,62 @@ void print_matrix(double **matrix, int n) {
     printf("-----\n");
 }
 
+void print_2d_array(double **matrix, int m, int n) {
+    int i, j;
+    printf("\n");
+    for (i = 0; i < m; i++) {
+        for (j = 0; j < n; j++)
+            printf("%.6f,", matrix[i][j]); /* Is there supposed to be a space after the comma? */
+        printf("%s","\n"); /* Is there supposed to be a space after the comma? */
+    }
+    printf("-----\n");
+}
+
 double **file_to_matrix(char *filename, int *m, int *n) { /* m rows and n columns */
-    int i, j, rows = 0, cols= 0;
+    int i, rows = 0, cols = 0, line_size = 1000;
+    char *line, *token;
     double **mat;
-    double *arr;
     LIST *head, *curr;
     FILE *file = fopen(filename, "r");
-
     if (file == NULL) {
         printf("Invalid Input!\n");
-        return 1;
+        exit(1);
     }
 
-
+    line = malloc(sizeof(char) * line_size);
     head = malloc(sizeof(LIST*));
     curr = head;
-
-
-    while (1) {
+    fgets(line, line_size, file);
+    if (line == NULL)
+        exit(1);
+    while (1 + strlen(line) == (unsigned) line_size) {
+        line = realloc(line, line_size * 2);
+        fgets(&(line[line_size - 2]), line_size, file);
+        line_size *= 2;
+    }
+    curr->arr = malloc(sizeof(double) * 10);
+    token = strtok(line, ",");
+    for (i = 0; i < 10; i++) {
+        if (token == NULL)
+            break;
+        curr->arr[i] = strtod(token, NULL);
+        cols++;
+        token = strtok(NULL, ",");
+    }
+    curr->arr = realloc(curr->arr, sizeof(double) * cols);
+    while (fgets(line, line_size, file) != NULL) {
         curr->next = malloc(sizeof(LIST*));
-
-
         curr = curr->next;
+        curr->arr = malloc(sizeof(double) * cols);
+        token = strtok(line, ",");
+        for (i = 0; i < cols; i++) {
+            if (token == NULL)
+                break;
+            curr->arr[i] = strtod(token, NULL);
+            token = strtok(NULL, ",");
+        }
         rows++;
     }
-
-
     fclose(file);
     mat = malloc(sizeof(double*) * rows);
     for (i = 0; i < rows; i++) {
