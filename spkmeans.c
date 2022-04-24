@@ -10,6 +10,7 @@
 #define epsilon 0.00001
 #define max_rotations 100
 
+static double *temp_eigen;
 
 int main(int argc, char **argv) {
     int i,n,dim;
@@ -227,6 +228,8 @@ int Heuristic (double *list, int n){
     return argmax;
 }
 
+
+
 /* Returns eigenvectors, V should be the rotation matrix*/
 double** eigenvectors (double *list, double **V, int n){
     int i,j,argmax;
@@ -236,7 +239,8 @@ double** eigenvectors (double *list, double **V, int n){
     if (indices == NULL)
         error();
     for (i = 0; i < n; i++) indices[i] = i; 
-    qsort_s(indices,n,sizeof(int),compare_indexes,list); /* qsort_s helps us sort by indices and therefore sort the eigenvectors, not just eigenvalues */
+    temp_eigen = list;
+    qsort(indices,n,sizeof(int),compare_indexes); /* qsort_s helps us sort by indices and therefore sort the eigenvectors, not just eigenvalues */
     for (i = 0; i < (int)floor(n/2); i++){
         delta = fabs(list[indices[i]] - list[indices[i+1]]);
         /*printf("%f,%f,  %f\n",list[indices[i]],list[indices[i+1]],delta);*/
@@ -255,11 +259,10 @@ double** eigenvectors (double *list, double **V, int n){
 }
 
 /* compare indexes for index sort of the eigenvalues */
-int compare_indexes(void *context, const void *b, const void * a)
+int compare_indexes(const void *b, const void * a)
 {
-    const double *list = (const double *)context;
 
-    return (list[*(int*)a] < list[*(int*)b]) - (list[*(int*)a] > list[*(int*)b]);
+    return (temp_eigen[*(int*)a] < temp_eigen[*(int*)b]) - (temp_eigen[*(int*)a] > temp_eigen[*(int*)b]);
 }
 
 /* normalize for matrix T */

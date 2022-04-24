@@ -1,7 +1,6 @@
 #ifndef SPK_H_
 #define SPK_H_
 
-double geo_c(double z, int n);
 double **matrix(int n,int m);
 double **rand_matrix(int n);
 double **symmetric(double **matrix, int n);
@@ -23,7 +22,7 @@ double **file_to_matrix(char *filename, int *m, int *n);
 void error();
 int Heuristic (double *list, int n);
 double** eigenvectors (double *list, double **V, int n);
-int compare_indexes(void *context, const void *b, const void * a);
+int compare_indexes(const void *b, const void * a);
 double **eigen(double **M, int n,int dim);
 void input_error();
 void free_matrix(double **array);
