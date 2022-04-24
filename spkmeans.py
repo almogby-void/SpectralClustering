@@ -19,8 +19,19 @@ def main():
     except Exception:
         assert_valid_input(False)
 
-    if goal != "spk":
-        c_proj.goal(k, goal, file_name)
+    a = c_proj.goal(k, goal, file_name)
+
+    if goal == "jacobi":
+        
+    
+    elif goal == "wam":
+        pass
+
+    elif goal == "ddg":
+        pass
+
+    elif goal == "lnorm":
+        pass
 
     else: # goal is "spk"
         max_iter = 300
