@@ -8,44 +8,44 @@ from traceback import print_exc
 def main():
     # starts reading the arguments here:
     n = len(sys.argv)
-    if n != 4:
-        print("Invalid Input!")
-        sys.exit(1)
-    # max_iter = 300
+    assert_valid_input(n == 4)
     try:
         k = int(sys.argv[1])
+        assert_valid_input(k >= 0)
         goal = sys.argv[2]
-        # epsilon = float(sys.argv[-3])
+        assert_valid_input(goal in {"spk", "wam", "ddg", "lnorm", "jacobi"})
         file_name = sys.argv[3]
-        # filename_2 = sys.argv[-1]
+        assert_valid_input(file_name.endswith((".txt", ".csv")))
     except Exception:
-        print("Invalid Input!")
-        sys.exit(1)
+        assert_valid_input(False)
 
-    # assert max_iter > 0, "Invalid Input!"
-    np.set_printoptions(suppress=True)
+    if goal != "spk":
+        c_proj.goal(k, goal, file_name)
 
-    df, d, N = read(file_name, k)
+    else: # goal is "spk"
+        max_iter = 300
+        epsilon = 0.01
+        np.set_printoptions(suppress=True)
 
-    df.drop([0], axis=1, inplace=True)
-    df = df.to_numpy()
+        df, d, N = read(file_name, k)
 
-    indexes = kmeansPP(df, k, N)
+        df.drop([0], axis=1, inplace=True)
+        df = df.to_numpy()
 
-    str_index = ""
-    for i in range(k - 1):
-        str_index += str(indexes[i]) + ","
-    str_index += str(indexes[-1])
-    try:
-        # a = c_proj.KMeans(K, N, d, max_iter, epsilon, df.flatten().tolist(), str_index)
-        a = c_proj.KMeans(k, N, d, df.flatten().tolist(), str_index)
-        result = np.reshape(a, (-1, d)).tolist()
-        print(str(indexes.tolist())[1:-1].replace(" ", ""))
-        for row in result:
-            print(str([round(x, 4) for x in row])[1:-1].replace(" ", ""))
-    except Exception:
-        print_exc()
-        print("Invalid result!")
+        indexes = kmeansPP(df, k, N)
+
+        str_index = ""
+        for i in range(k - 1):
+            str_index += str(indexes[i]) + ","
+        str_index += str(indexes[-1])
+        try:
+            a = c_proj.KMeans(k, N, d, max_iter, epsilon, df.flatten().tolist(), str_index)
+            result = np.reshape(a, (-1, d)).tolist()
+            print(str(indexes.tolist())[1:-1].replace(" ", ""))
+            for row in result:
+                print(str([round(x, 4) for x in row])[1:-1].replace(" ", ""))
+        except Exception:
+            assert_other_errors(False)
 
 
 def read(filename, k):
@@ -84,6 +84,18 @@ def kmeansPP(df, k, N):
         probability = np.divide(minDist, np.sum(minDist))
         centIndex = np.append(centIndex, np.random.choice(N, p=probability))
     return centIndex
+
+
+def assert_valid_input(condition):
+    if not condition:
+        print("Invalid Input!")
+        sys.exit(1)
+
+
+def assert_other_errors(condition):
+    if not condition:
+        print("An Error Has Occurred!")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
