@@ -19,19 +19,9 @@ def main():
     except Exception:
         assert_valid_input(False)
 
-    a = c_proj.goal(k, goal, file_name)
-
-    if goal == "jacobi":
-        pass        
-    
-    elif goal == "wam":
-        pass
-
-    elif goal == "ddg":
-        pass
-
-    elif goal == "lnorm":
-        pass
+    if goal != "spk":
+        mat = c_proj.goal(k, goal, file_name)
+        print_matrix(mat)
 
     else: # goal is "spk"
         max_iter = 300
@@ -95,6 +85,13 @@ def kmeansPP(df, k, N):
         probability = np.divide(minDist, np.sum(minDist))
         centIndex = np.append(centIndex, np.random.choice(N, p=probability))
     return centIndex
+
+
+def print_matrix(mat):
+    for row in mat:
+        # for val in row:
+        #     print("%.4f" % val, end=",")
+        print(str([round(x, 4) for x in row])[1:-1].replace(" ", ""))
 
 
 def assert_valid_input(condition):
