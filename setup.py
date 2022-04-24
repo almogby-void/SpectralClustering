@@ -1,11 +1,11 @@
 from setuptools import Extension, setup
 
-module = Extension('myproject',
+module = Extension('spkmeansmodule',
                   sources=[
-                    'spkmeans',
+                    'spkmeans.c',
                     'spkmeansmodule.c'
                   ])
-setup(name='myproject',
+setup(name='spkmeansmodule',
      version='1.0.0',
      description='Python wrapper for C project',
      ext_modules=[module])
