@@ -71,10 +71,13 @@ static PyObject* goal(PyObject *self, PyObject *args)
     {
         V = Identity(n);
         eigenvalues =  diag(Jacobi(L_norm(M,n,dim),V,n,dim),n);
-        results = diag_degree_matrix(M,n,dim);
-        return Py_BuildValue("(OO)", MatrixPyObject(results,n,n));
+        py_eigenvalues = PyList_New(size);
+        for (i = 0; i < size; i++)
+            PyList_SetItem(py_eigenvalues, i, PyFloat_FromDouble(eigenvalues[i]));
+        return Py_BuildValue("(OO)", py_eigenvalues, MatrixPyObject(V,n,n));
     }
-    
+    else
+        input_error();
 }
 
 
