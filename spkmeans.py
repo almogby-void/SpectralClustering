@@ -22,7 +22,7 @@ def main():
     a = c_proj.goal(k, goal, file_name)
 
     if goal == "jacobi":
-        
+        pass        
     
     elif goal == "wam":
         pass
