@@ -15,15 +15,22 @@
 
 
 int main(int argc, char **argv) {
-    double **M;
+    double **M, **L, **V,**U;
+    double *eigenvalues;
     int n,dim;
     M = file_to_matrix("test_input.txt",&n,&dim);
-    print_matrix(M,n,dim);
-    print_matrix(diag_degree_matrix(adj_matrix(M,n,dim),n),n,n);
-
+    V = Identity(n);
+    L = L_norm(M,n,dim);
+    eigenvalues = diag(Jacobi(L,V,n,0),n);
+    print_matrix(V,n,n);
+    U = eigenvectors(eigenvalues,V,n);
+    normalize(U,n,3);
+    print_matrix(U,n,3);
     argv[0] = argv[1];
     return argc; 
 } 
+
+
 
 double **rand_matrix(int n) {
     int i, j;
@@ -52,16 +59,19 @@ double **adj_matrix(double ** M, int n, int dim){
     return adj;
 }
 
-double **diag_degree_matrix(double **M,int n) {
+
+double **diag_degree_matrix(double **M,int n, int dim) {
     int i, j;
     double **diag;
     diag = matrix(n,n);
  
     for(i = 0; i < n; i++){
         for(j = 0; j < n; j++){
-            diag[i][i] +=  exp(-dist(M[i],M[j],n)/2);
+            diag[i][i] +=  (i != j) * exp(-dist(M[i],M[j],dim)/2);
         }
     }
+    
+    return diag;
 }
 
 double *diag(double ** matrix,int n){
@@ -98,12 +108,12 @@ double **matrix(int n,int m){
 }
 
 
-double **L_norm(double **M,int n) {
+double **L_norm(double **M,int n,int dim) {
     int i, j;
     double **L, **W, **D;
     L = matrix(n,n);
-    W = adj_matrix(M,n,3);
-    D = matrix_func(diag_degree_matrix(M,n), divsqrt,n); /* divsqrt is a function */
+    W = adj_matrix(M,n,dim);
+    D = matrix_func(diag_degree_matrix(M,n,dim), divsqrt,n); /* divsqrt is a function */
     L = matrix_mult(matrix_mult(D, W,n), D,n);
     for (i = 0; i < n; i++)
         for (j = 0; j < n; j++)
@@ -125,7 +135,7 @@ double **Jacobi_Rotation_Matrix(double **A, int i, int j, int n) { /* Unused? */
     return m;
 }
 
-double **Jacobi(double **A, int n, int iter) {
+double **Jacobi(double **A, double ** V, int n, int iter) {
     int i, j;
     int row, col;
     double **temp; /* A', temp[0]=A'[i], temp[1]=A'[j] */
@@ -157,7 +167,6 @@ double **Jacobi(double **A, int n, int iter) {
     }
     temp[0][i] = c * c * A[i][i] + s * s * A[j][j] - 2 * s * c * A[i][j];
     temp[1][j] = s * s * A[i][i] + c * c * A[j][j] + 2 * s * c * A[i][j];
-    printf("%f\n", temp[1][j]);
     temp[0][j] = (c * c - s * s) * A[i][j] + s * c * (A[i][i] - A[j][j]); /* TODO: Check if true */
     temp[1][i] = temp[0][j];
     for (col = 0; col < n; col++)
@@ -177,34 +186,76 @@ double **Jacobi(double **A, int n, int iter) {
     A[i][j] = temp[0][j];
     A[j][i] = A[i][j];
     
-    print_matrix(A,n,n);
     square_diff+=1;
     square_diff = old_off - off(A,n);
-    printf("theta:%f,t:%f,c:%f,s:%f,old_off:%f,off:%f,diff:%f,i=%d,j=%d\n",theta,t,c,s,old_off,off(A,n),square_diff,i,j);
-    free(temp);
-    if ((square_diff <= epsilon) | (++iter > max_rotations))
+    /*printf("theta:%f,t:%f,c:%f,s:%f,old_off:%f,off:%f,diff:%f,i=%d,j=%d\n",theta,t,c,s,old_off,off(A,n),square_diff,i,j);*/
+    for (row = 0; row < n; row++)
+    {
+        temp[0][row] = c*V[row][i] - s*V[row][j];
+        temp[1][row] = s*V[row][i] + c*V[row][j];
+    }
+    for (row = 0; row < n; row++)
+    {
+        V[row][i] = temp[0][row];
+        V[row][j] = temp[1][row];
+    }
+    
+    if ((square_diff < epsilon) && (++iter > max_rotations)) /* Check why square_diff is so inaccurate */
         return A;
-    return Jacobi(A, n, iter);
+    return Jacobi(A, V,n, iter);
 }
 
 int cmpfunc (const void * a, const void * b) {
-   return ( *(int*)a - *(int*)b );
+    return (*(double*)a > *(double*)b) - (*(double*)a < *(double*)b);
 }
 
 
 int Heuristic (double *list, int n){
     int i,argmax;
     double delta,max_delta = 0;
-    n = (int)floor(n/2);
     qsort(list,n,sizeof(double),cmpfunc);
-    for (i = 0; i < n; i++){
-        delta = (list[i] - list[i+1]);
+
+    for (i = 0; i < (int)floor(n/2); i++){
+        
+        delta = fabs(list[i] - list[i+1]);
         if (delta > max_delta){
             max_delta = delta;
             argmax = i;
         }
     }
     return argmax;
+}
+
+double** eigenvectors (double *list, double **V, int n){
+    int i,j,argmax;
+    double delta,max_delta = 0;
+    double ** U;
+    int * indices = calloc(n,sizeof(int));
+    if (indices == NULL)
+        error();
+    for (i = 0; i < n; i++) indices[i] = i; 
+    qsort_s(indices,n,sizeof(int),compare_indexes,list); /* qsort_s helps us sort by indices and therefore sort the eigenvectors, not just eigenvalues */
+    for (i = 0; i < (int)floor(n/2); i++){
+        delta = fabs(list[indices[i]] - list[indices[i+1]]);
+        /*printf("%f,%f,  %f\n",list[indices[i]],list[indices[i+1]],delta);*/
+        if (delta > max_delta){
+            max_delta = delta;
+            argmax = i;
+        }
+    }
+    U = matrix(n,argmax+1);
+    for (i = 0; i < n; i++){
+        for (j = 0; j < argmax+1; j++)
+            U[i][j] = V[i][indices[j]];
+    }
+    return U;
+}
+
+int compare_indexes(void *context, const void *b, const void * a)
+{
+    const double *list = (const double *)context;
+
+    return (list[*(int*)a] < list[*(int*)b]) - (list[*(int*)a] > list[*(int*)b]);
 }
 
 void normalize(double **A, int n, int k){
@@ -240,7 +291,7 @@ double **matrix_func(double **M, double (*f)(double), int n) {
     return result;
 }
 
-double divsqrt(double A) {return A ? 1 / sqrt(A) : 0;}
+double divsqrt(double A) {return A ? 1 / sqrt(A) : 0;} /* Divides and does square root for the laplacian function*/
 
 double **matrix_mult(double **A, double **B,int n) {
     int i, j, k; 
@@ -253,7 +304,7 @@ double **matrix_mult(double **A, double **B,int n) {
 }
 
 
-static double dist(double *X, double *Y, int dim) {
+double dist(double *X, double *Y, int dim) {
     double result = 0;
     int i = 0;
     for (; i < dim; i++)
@@ -261,7 +312,7 @@ static double dist(double *X, double *Y, int dim) {
     return sqrt(result);
 }
 
-static void error(){
+void error(){
     printf("An Error Has Occurred");
     exit(0);
 }
@@ -270,11 +321,11 @@ void print_matrix(double **matrix, int m, int n){
     int i, j;
     printf("\n");
     for (i = 0; i < m; i++) {
-        for (j = 0; j < n; j++)
-            printf("%.3f,", matrix[i][j]); /* Is there supposed to be a space after the comma? */
-        printf("%s","\n"); /* Is there supposed to be a space after the comma? */
+        for (j = 0; j < n-1; j++){
+            printf("%.4f,", matrix[i][j]); 
+        }
+        printf("%.4f\n", matrix[i][n-1]); 
     }
-    printf("-----\n");
 }
 
 
@@ -301,7 +352,7 @@ double **file_to_matrix(char *filename, int *m, int *n) { /* m rows and n column
     curr = head;
     fgets(line, line_size, file);
     if (line == NULL)
-        exit(1);
+        error();
     while (1 + strlen(line) == (unsigned) line_size) {
         line = realloc(line, line_size * 2);
         fgets(&(line[line_size - 2]), line_size, file);
