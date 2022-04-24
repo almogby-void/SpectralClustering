@@ -101,6 +101,7 @@ double **Identity(int n) { /* identity matrix */
     return m;
 }
 
+/* Initializes a matrix */
 double **matrix(int n,int m){
     int i = 0;
     double **M = calloc(n,sizeof(double*)); 
@@ -139,6 +140,8 @@ double **Jacobi_Rotation_Matrix(double **A, int i, int j, int n) { /* Unused? */
     return m;
 }
 
+
+/* Jacobi algorithm, V should be initialized as the identity matrix and iter should be 0 */
 double **Jacobi(double **A, double ** V, int n, int iter) {
     int i, j;
     int row, col;
@@ -156,7 +159,7 @@ double **Jacobi(double **A, double ** V, int n, int iter) {
     old_off = off(A, n);
     for (row = 0; row < n; row++)
         for (col = 0; col < n; col++)
-            if ((row != col) & (fabs(A[row][col]) > fabs(A[i][j]))) { /* Is it supposed to be a bitwise AND? */
+            if ((row != col) & (fabs(A[row][col]) > fabs(A[i][j]))) { 
                 i = row;
                 j = col;
             }
@@ -171,26 +174,20 @@ double **Jacobi(double **A, double ** V, int n, int iter) {
     }
     temp[0][i] = c * c * A[i][i] + s * s * A[j][j] - 2 * s * c * A[i][j];
     temp[1][j] = s * s * A[i][i] + c * c * A[j][j] + 2 * s * c * A[i][j];
-    temp[0][j] = (c * c - s * s) * A[i][j] + s * c * (A[i][i] - A[j][j]); /* TODO: Check if true */
+    temp[0][j] = (c * c - s * s) * A[i][j] + s * c * (A[i][i] - A[j][j]);
     temp[1][i] = temp[0][j];
     for (col = 0; col < n; col++)
-        if ((col != i) & (col != j)) { /* Is it supposed to be a bitwise AND? */
-        /* I calculate convergence here instead of the offsets individually as there are a lot of duplicates. */
-            square_diff += 2 * (A[i][col] * A[i][col] - temp[0][col] * temp[0][col]);
-            square_diff += 2 * (A[j][col] * A[j][col] - temp[1][col] * temp[1][col]);
+        if ((col != i) & (col != j)) {
             A[i][col] = temp[0][col];
             A[col][i] = temp[0][col];
             A[j][col] = temp[1][col];
             A[col][j] = temp[1][col];
         }
-    square_diff += A[i][i] * A[i][i] + A[j][j] * A[j][j] + 2 * A[i][j] * A[i][j] 
-                - temp[0][i] * temp[0][i] - temp[1][j] * temp[1][j] - 2 * temp[0][j] * temp[0][j];
     A[i][i] = temp[0][i];
     A[j][j] = temp[1][j];
     A[i][j] = temp[0][j];
     A[j][i] = A[i][j];
     
-    square_diff+=1;
     square_diff = old_off - off(A,n);
     /*printf("theta:%f,t:%f,c:%f,s:%f,old_off:%f,off:%f,diff:%f,i=%d,j=%d\n",theta,t,c,s,old_off,off(A,n),square_diff,i,j);*/
     for (row = 0; row < n; row++)
@@ -203,7 +200,7 @@ double **Jacobi(double **A, double ** V, int n, int iter) {
         V[row][i] = temp[0][row];
         V[row][j] = temp[1][row];
     }
-    
+    free_matrix(temp);
     if ((square_diff < epsilon) && (++iter > max_rotations)) /* Check why square_diff is so inaccurate */
         return A;
     return Jacobi(A, V,n, iter);
@@ -230,6 +227,7 @@ int Heuristic (double *list, int n){
     return argmax;
 }
 
+/* Returns eigenvectors, V should be the rotation matrix*/
 double** eigenvectors (double *list, double **V, int n){
     int i,j,argmax;
     double delta,max_delta = 0;
@@ -256,6 +254,7 @@ double** eigenvectors (double *list, double **V, int n){
     return U;
 }
 
+/* compare indexes for index sort of the eigenvalues */
 int compare_indexes(void *context, const void *b, const void * a)
 {
     const double *list = (const double *)context;
@@ -263,6 +262,7 @@ int compare_indexes(void *context, const void *b, const void * a)
     return (list[*(int*)a] < list[*(int*)b]) - (list[*(int*)a] > list[*(int*)b]);
 }
 
+/* normalize for matrix T */
 void normalize(double **A, int n, int k){
     int i,j;
     double sum = 0;
@@ -350,7 +350,7 @@ typedef struct list_t {
 } LIST;
 
 double **file_to_matrix(char *filename, int *m, int *n) { /* m rows and n columns */
-    int i, rows = 0, cols = 0, line_size = 1000;
+    int i, rows = 0, cols = 0, line_size = 10;
     char *line, *token;
     double **mat;
     LIST *head, *curr;
@@ -359,18 +359,18 @@ double **file_to_matrix(char *filename, int *m, int *n) { /* m rows and n column
         printf("Invalid Input!\n");
         exit(1);
     }
-    rows++;
 
     line = malloc(sizeof(char) * line_size);
     head = malloc(sizeof(LIST*));
     curr = head;
     fgets(line, line_size, file);
     if (line == NULL)
-        error();
+        exit(1);
+    rows++;
     while (1 + strlen(line) == (unsigned) line_size) {
         line = realloc(line, line_size * 2);
-        fgets(&(line[line_size - 2]), line_size, file);
-        line_size *= 2;
+        fgets(line + line_size - 1, line_size + 1, file);
+            line_size *= 2;
     }
     curr->arr = malloc(sizeof(double) * 10);
     token = strtok(line, ",");

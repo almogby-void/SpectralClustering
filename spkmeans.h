@@ -26,4 +26,5 @@ double** eigenvectors (double *list, double **V, int n);
 int compare_indexes(void *context, const void *b, const void * a);
 double **eigen(double **M, int n,int dim);
 void input_error();
+void free_matrix(double **array);
 #endif
