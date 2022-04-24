@@ -54,8 +54,27 @@ static PyObject* goal(PyObject *self, PyObject *args)
         return Py_BuildValue("(O)", py_T);
     }
     else if (command == "wam"){
-        
+        results = adj_matrix(M,n,dim);
+        return Py_BuildValue("(O)", MatrixPyObject(results,n,n));
     }
+    else if (command = "ddg")
+    {
+        results = diag_degree_matrix(M,n,dim);
+        return Py_BuildValue("(O)", MatrixPyObject(results,n,n));
+    }
+    else if (command = "lnorm")
+    {
+        results = L_norm(M,n,dim);
+        return Py_BuildValue("(O)", MatrixPyObject(results,n,n));
+    }
+    else if (command = "jacobi")
+    {
+        V = Identity(n);
+        eigenvalues =  diag(Jacobi(L_norm(M,n,dim),V,n,dim),n);
+        results = diag_degree_matrix(M,n,dim);
+        return Py_BuildValue("(OO)", MatrixPyObject(results,n,n));
+    }
+    
 }
 
 
