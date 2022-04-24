@@ -34,7 +34,6 @@ void print_2d_array(double **matrix, int m, int n);
 
 
 int main(int argc, char **argv) {
-<<<<<<< Updated upstream
     int rows, cols;
     double **mat;
     if (argc != 3) {
@@ -58,20 +57,6 @@ int main(int argc, char **argv) {
     print_matrix(random, 3);
     print_matrix(Jacobi(random, 3, 0), 3);
     argv[0] = argv[1]; */
-=======
-    double **M, **L, **V,**U;
-    double *eigenvalues;
-    int n,dim;
-    M = file_to_matrix("test_input.txt",&n,&dim);
-    V = Identity(n);
-    L = L_norm(M,n,dim);
-    eigenvalues = diag(Jacobi(L,V,n,0),n);
-    print_matrix(V,n,n);
-    U = eigenvectors(eigenvalues,V,n);
-    normalize(U,n,3);
-    print_matrix(U,n,3);
-    argv[0] = argv[1];
->>>>>>> Stashed changes
     return argc;
 } 
 
