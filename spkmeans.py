@@ -25,7 +25,7 @@ def main():
 
     else: # goal is "spk"
         max_iter = 300
-        epsilon = 0.01
+        epsilon = 0.00001
         np.set_printoptions(suppress=True)
 
         df, d, N = read(file_name, k)
