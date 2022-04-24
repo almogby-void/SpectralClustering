@@ -35,18 +35,6 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-double **eigen(double **M, int n,int dim){
-    double **V;
-    double **results;
-    int k;
-    V = Identity(n);
-    results = calloc(2,sizeof(double*));
-    if (results == NULL)
-        error();
-    results[0] = diag(Jacobi(L_norm(M,n,dim),V,n,dim),n);
-    results[1] = eigenvectors(results[0],V,n);
-    return results;
-}
 
 double **rand_matrix(int n) {
     int i, j;

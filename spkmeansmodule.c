@@ -28,7 +28,7 @@ static PyObject* goal(PyObject *self, PyObject *args)
     int         i,j,n,dim;
     char        *command;
     PyObject    *pList = NULL;
-    PyObject    *py_eigenvalues, *py_eigenvectors;
+    PyObject    *py_eigenvalues, *py_T;
     PyObject    *pItem,*c;
     double      **M,results;
     double      *eigenvalues;
@@ -45,14 +45,17 @@ static PyObject* goal(PyObject *self, PyObject *args)
         pItem = PyList_GetItem(pList, i);
         M[n%dim][(int)floor(n/i)] = PyFloat_AsDouble(pItem);
     }
-    results = eigen(M,n,dim);
-    py_eigenvectors = convert_matrix_to_PyObject(eigenvectors, size, size);
-    py_eigenvalues = PyList_New(size);
-    for (i = 0; i < size; i++)
-        PyList_SetItem(py_eigenvalues, i, PyFloat_FromDouble(results[0][i));
-    free_matrix(c_matrix);
-    free_matrix(eigenvectors);
-    return Py_BuildValue("(OO)", py_eigenvalues, py_eigenvectors);
+    if (command == "spk"){
+        eigenvalues = diag(Jacobi(L_norm(M,n,dim),V,n,dim),n);
+        results = eigenvectors(eigenvalues,V,n);
+        normalize(results,n,Heuristic(results,n));
+        py_T = MatrixPyObject(eigenvectors, n, n);
+        free_matrix(eigenvectors);
+        return Py_BuildValue("(O)", py_T);
+    }
+    else if (command == "wam"){
+        
+    }
 }
 
 
@@ -67,9 +70,8 @@ static PyObject *eigenvectors_capi(PyObject *self, PyObject *args){
     }
 
     size = (int)PyList_Size(matrix);
-    c_matrix = convert_PyObject_matrix_to_list(matrix, size, size);
     eigenvectors = calculate_eigenvalues(c_matrix, size);
-    py_eigenvectors = convert_matrix_to_PyObject(eigenvectors, size, size);
+    py_eigenvectors = MatrixPyObject(eigenvectors, size, size);
     py_eigenvalues = PyList_New(size);
     for (i = 0; i < size; i++)
         PyList_SetItem(py_eigenvalues, i, PyFloat_FromDouble(c_matrix[i][i]));
@@ -77,6 +79,19 @@ static PyObject *eigenvectors_capi(PyObject *self, PyObject *args){
     free_matrix(c_matrix);
     free_matrix(eigenvectors);
     return Py_BuildValue("(OO)", py_eigenvalues, py_eigenvectors);
+}
+
+PyObject *MatrixPyObject(double **matrix, int rows, int columns){
+    PyObject *row;
+    int i, j;
+    PyObject *py_matrix = PyList_New(rows);
+    for (i = 0; i < rows; i++){
+        row = PyList_New(columns);
+        for (j = 0; j < columns; j++)
+            PyList_SetItem(row, j, PyFloat_FromDouble(matrix[i][j]));
+        PyList_SetItem(py_matrix, i, row);
+    }
+    return py_matrix;
 }
 
 
