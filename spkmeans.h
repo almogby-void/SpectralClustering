@@ -24,4 +24,5 @@ void error();
 int Heuristic (double *list, int n);
 double** eigenvectors (double *list, double **V, int n);
 int compare_indexes(void *context, const void *b, const void * a);
+double **eigen(double **M, int n,int dim);
 #endif

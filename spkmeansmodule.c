@@ -23,39 +23,62 @@ static PyObject* geo_capi(PyObject *self, PyObject *args);
  * This is a requirement for all functions and methods in the C API.
  * It has input PyObject *args from Python.
  */
-static PyObject* geo_capi(PyObject *self, PyObject *args)
+static PyObject* goal(PyObject *self, PyObject *args)
 {
-    int         i,j,n,m;
+    int         i,j,n,dim;
     char        *command;
     PyObject    *pList = NULL;
-    PyObject    *pResult;
+    PyObject    *py_eigenvalues, *py_eigenvectors;
     PyObject    *pItem,*c;
-    double      **M;
+    double      **M,results;
+    double      *eigenvalues;
     /* This parses the Python arguments into a double (d)  variable named z and int (i) variable named n*/
-    if(!PyArg_ParseTuple(args, "siiO", &command,&n,&m,&pList)) {
+    if(!PyArg_ParseTuple(args, "siiO", &command,&n,&dim,&pList)) {
         return NULL; /* In the CPython API, a NULL value is never valid for a
                         PyObject* so it is used to signal that an error has occurred. */
     }
-    if (PyList_Size(pList) != n*m)
+    if (PyList_Size(pList) != n*dim)
         input_error();
 
-    M = matrix(n,m);
-    for (i = 0; i < n*m; i++)
-    {
+    M = matrix(n,dim);
+    for (i = 0; i < n*dim; i++){
         pItem = PyList_GetItem(pList, i);
-        M[n%m][(int)floor(n/i)] = PyFloat_AsDouble(pItem);
+        M[n%dim][(int)floor(n/i)] = PyFloat_AsDouble(pItem);
     }
-    pResult = PyList_New(0);
-    for (i = 0; i < n; i++)
-    {
-        for (j = 0; j < m; j++)
-        {
-            c = Py_BuildValue("f",M[i][j]);
-            PyList_Append(pResult,c);
-        }
-    }
-    return pResult;
+    results = eigen(M,n,dim);
+    py_eigenvectors = convert_matrix_to_PyObject(eigenvectors, size, size);
+    py_eigenvalues = PyList_New(size);
+    for (i = 0; i < size; i++)
+        PyList_SetItem(py_eigenvalues, i, PyFloat_FromDouble(results[0][i));
+    free_matrix(c_matrix);
+    free_matrix(eigenvectors);
+    return Py_BuildValue("(OO)", py_eigenvalues, py_eigenvectors);
 }
+
+
+static PyObject *eigenvectors_capi(PyObject *self, PyObject *args){
+    PyObject *matrix,*py_eigenvectors, *py_eigenvalues;
+    double **c_matrix,**eigenvectors;
+    int i,size;
+
+    if (!PyArg_ParseTuple(args, "O!", &PyList_Type, &matrix) || (!PyList_Check(matrix))){
+        printf("Invalid Input!\n");
+        return NULL;
+    }
+
+    size = (int)PyList_Size(matrix);
+    c_matrix = convert_PyObject_matrix_to_list(matrix, size, size);
+    eigenvectors = calculate_eigenvalues(c_matrix, size);
+    py_eigenvectors = convert_matrix_to_PyObject(eigenvectors, size, size);
+    py_eigenvalues = PyList_New(size);
+    for (i = 0; i < size; i++)
+        PyList_SetItem(py_eigenvalues, i, PyFloat_FromDouble(c_matrix[i][i]));
+
+    free_matrix(c_matrix);
+    free_matrix(eigenvectors);
+    return Py_BuildValue("(OO)", py_eigenvalues, py_eigenvectors);
+}
+
 
 /*
  * This array tells Python what methods this module has.
@@ -75,7 +98,7 @@ static PyMethodDef capiMethods[] = {
 /* This initiates the module using the above definitions. */
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "capi_project", /* name of module */
+    "spkmeansmodule ", /* name of module */
     NULL, /* module documentation, may be NULL */
     -1,  /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
     capiMethods /* the PyMethodDef array from before containing the methods of the extension */
@@ -89,7 +112,7 @@ static struct PyModuleDef moduledef = {
  * This should be the only non-static item defined in the module file
  */
 PyMODINIT_FUNC
-PyInit_capi_project(void)
+PyInit_spkmeansmodule(void)
 {
     PyObject *m;
     m = PyModule_Create(&moduledef);

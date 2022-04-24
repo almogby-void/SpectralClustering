@@ -30,7 +30,22 @@ int main(int argc, char **argv) {
         printf("%.4f\n",eigenvalues[n-1]);
         print_matrix(V,n,n);
     }
+    else
+        input_error();
     return 0;
+}
+
+double **eigen(double **M, int n,int dim){
+    double **V;
+    double **results;
+    int k;
+    V = Identity(n);
+    results = calloc(2,sizeof(double*));
+    if (results == NULL)
+        error();
+    results[0] = diag(Jacobi(L_norm(M,n,dim),V,n,dim),n);
+    results[1] = eigenvectors(results[0],V,n);
+    return results;
 }
 
 double **rand_matrix(int n) {
@@ -273,6 +288,10 @@ void normalize(double **A, int n, int k){
         }
     }
 }
+void free_matrix(double **array) {
+    free(*array);
+    free(array);
+}
 
 double off(double **matrix, int n) {
     double sum = 0;
@@ -316,6 +335,11 @@ double dist(double *X, double *Y, int dim) {
 
 void error(){
     printf("An Error Has Occurred");
+    exit(0);
+}
+
+void input_error(){
+    printf("Invalid Input!");
     exit(0);
 }
 
